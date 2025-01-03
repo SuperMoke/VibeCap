@@ -323,7 +323,7 @@ export default function Sidebar({
       <Dialog open={openDialog} handler={() => setOpenDialog(false)}>
         <DialogHeader>Save Data Before Logout?</DialogHeader>
         <DialogBody>
-          Are you sure you want to leave VibeCap? Don't worry your data will be
+          Are you sure you want to leave VibeCap? Dont worry your data will be
           saved once done.
         </DialogBody>
         <DialogFooter>
