@@ -41,7 +41,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { set } from "lodash";
+
 
 export default function UserProfile() {
   const [name, setName] = useState("");

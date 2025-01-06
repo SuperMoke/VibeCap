@@ -259,7 +259,6 @@ export default function UserHomepage() {
   };
 
   const displayTips = () => {
-    console.log("Displaying tips...");
     const notificationSound = new Audio("/VibeCap Tip Sound Effect.mp3"); // Add your sound file to the public folder
 
     const tips = {
