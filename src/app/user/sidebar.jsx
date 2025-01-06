@@ -291,7 +291,7 @@ export default function Sidebar({
             </div>
           </div>
 
-          <div className="mt-auto space-y-4">
+          <div className="mt-auto space-y-4 pt-4 sticky bottom-0 ">
             <div className="text-center">
               <Typography className="text-sm opacity-75">
                 {formatDate(currentDateTime)}

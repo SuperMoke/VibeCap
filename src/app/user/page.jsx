@@ -432,13 +432,14 @@ export default function UserHomepage() {
 
   const [lastMusicThresholds, setLastMusicThresholds] = useState({});
 
-  const checkEmotionThreshold = (counts) => {
-    // Don't interrupt if playlist is locked
-    if (isPlaylistLocked) return;
+  const checkEmotionThreshold = async (counts) => {
+    // Don't check if already playing
+    if (isPlaying) return;
 
     const musicThreshold = 20;
     let updatedMusicThresholds = { ...lastMusicThresholds };
 
+    // Sort emotions by count, excluding neutral
     const sortedEmotions = Object.entries(counts)
       .filter(([emotion]) => emotion !== "neutral")
       .sort(([, a], [, b]) => b - a);
@@ -447,29 +448,36 @@ export default function UserHomepage() {
       if (count >= musicThreshold) {
         const thresholdMultiple = Math.floor(count / musicThreshold);
 
+        // Check if we've hit a new threshold multiple
         if (
           !lastMusicThresholds[emotion] ||
           thresholdMultiple > lastMusicThresholds[emotion]
         ) {
-          // Only show prompt if not currently playing
-          if (!isPlaying) {
-            const message = musicMessages[emotion][0];
-            setCurrentMusicMessage(message);
-            fetchSongs(emotion);
+          try {
+            // Fetch new playlist
+            await fetchSongs(emotion);
+
+            // Update UI elements
             setCurrentPlaylistEmotion(emotion);
+            setCurrentMusicMessage(musicMessages[emotion][0]);
 
-            // Lock playlist until current set finishes
-            setIsPlaylistLocked(true);
-
-            updatedMusicThresholds[emotion] = thresholdMultiple;
-            setLastMusicThresholds(updatedMusicThresholds);
-
+            // Play notification sound
             const notificationSound = new Audio(
               "/VipeCap Music Recommendation Sound Effect.mp3"
             );
-            notificationSound.play();
+            await notificationSound.play();
+
+            // Update thresholds
+            updatedMusicThresholds[emotion] = thresholdMultiple;
+            setLastMusicThresholds(updatedMusicThresholds);
+
+            // Lock playlist until complete
+            setIsPlaylistLocked(true);
+
+            break;
+          } catch (error) {
+            console.error("Error recommending music:", error);
           }
-          break;
         }
       }
     }

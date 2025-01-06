@@ -90,7 +90,7 @@ export default function AttendancePage() {
           <div className="container mx-auto">
             <div className="flex flex-col justify-center gap-6">
               <Typography variant="h2" className="text-center">
-                Attendance Tracking
+                User Logs Tracking
               </Typography>
               <div className="flex justify-end mb-4">
                 <div className="w-72">

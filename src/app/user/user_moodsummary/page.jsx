@@ -51,7 +51,10 @@ export default function User_MoodSummary() {
   }, [user]);
 
   const getEmotionTimeSeries = (data) => {
-    const sortedData = [...data].sort(
+    // Filter out entries with invalid timestamps
+    const validData = data.filter((entry) => entry?.timestamp?.toDate);
+
+    const sortedData = [...validData].sort(
       (a, b) => a.timestamp.toDate() - b.timestamp.toDate()
     );
 
@@ -174,7 +177,7 @@ export default function User_MoodSummary() {
   };
 
   const fetchMoodData = () => {
-    if (!user) return; // Ensure user is not null
+    if (!user) return;
     const q = query(
       collection(db, "mooddata"),
       where("userId", "==", user.uid)
@@ -182,13 +185,16 @@ export default function User_MoodSummary() {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const data = [];
       querySnapshot.forEach((doc) => {
-        data.push(doc.data());
+        const docData = doc.data();
+        // Only add entries with valid timestamp
+        if (docData?.timestamp?.toDate) {
+          data.push(docData);
+        }
       });
       setMoodData(data);
       setFilteredMoodData(data);
     });
 
-    // Return the unsubscribe function to clean up the listener when the component unmounts
     return unsubscribe;
   };
 
@@ -199,6 +205,9 @@ export default function User_MoodSummary() {
 
   const filterDataByDate = (date) => {
     const filteredData = moodData.filter((data) => {
+      // Check if data and timestamp exist
+      if (!data?.timestamp?.toDate) return false;
+
       const dataDate = data.timestamp.toDate();
       return (
         dataDate.getDate() === date.getDate() &&

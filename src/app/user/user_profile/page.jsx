@@ -35,7 +35,12 @@ import Header from "../header";
 import Sidebar from "../sidebar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { set } from "lodash";
 
 export default function UserProfile() {
@@ -66,15 +71,28 @@ export default function UserProfile() {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const validatePassword = (password) => {
-    const passwordRegex =
-      /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
-    return passwordRegex.test(password);
+    const criteria = {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(password),
+    };
+    return Object.values(criteria).every(Boolean);
   };
 
   const validateContact = (contact) => {
     const contactRegex = /^\d{11}$/;
     return contactRegex.test(contact);
   };
+
+  const [passwordCriteria, setPasswordCriteria] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecial: false,
+  });
 
   useEffect(() => {
     if (loading) return;
@@ -243,6 +261,19 @@ export default function UserProfile() {
       }
     }
   };
+
+  const CriteriaItem = ({ met, text }) => (
+    <div className="flex items-center gap-2 text-sm">
+      {met ? (
+        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+      ) : (
+        <XCircleIcon className="h-4 w-4 text-red-500" />
+      )}
+      <span className={`${met ? "text-green-500" : "text-red-500"} text-xs`}>
+        {text}
+      </span>
+    </div>
+  );
 
   return isAuthorized ? (
     <>
@@ -432,7 +463,20 @@ export default function UserProfile() {
                         label="Enter new password"
                         type={showNewPassword ? "text" : "password"}
                         value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        onChange={(e) => {
+                          const newPass = e.target.value;
+                          setNewPassword(newPass);
+                          setPasswordCriteria({
+                            minLength: newPass.length >= 8,
+                            hasUpperCase: /[A-Z]/.test(newPass),
+                            hasLowerCase: /[a-z]/.test(newPass),
+                            hasNumber: /\d/.test(newPass),
+                            hasSpecial:
+                              /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(
+                                newPass
+                              ),
+                          });
+                        }}
                         className="w-full"
                       />
                       <button
@@ -468,6 +512,28 @@ export default function UserProfile() {
                           <EyeIcon className="h-5 w-5 text-gray-400" />
                         )}
                       </button>
+                    </div>
+                    <div className="mt-2 space-y-1 bg-gray-50 p-2 rounded">
+                      <CriteriaItem
+                        met={passwordCriteria.minLength}
+                        text="At least 8 characters"
+                      />
+                      <CriteriaItem
+                        met={passwordCriteria.hasUpperCase}
+                        text="Contains uppercase letter"
+                      />
+                      <CriteriaItem
+                        met={passwordCriteria.hasLowerCase}
+                        text="Contains lowercase letter"
+                      />
+                      <CriteriaItem
+                        met={passwordCriteria.hasNumber}
+                        text="Contains number"
+                      />
+                      <CriteriaItem
+                        met={passwordCriteria.hasSpecial}
+                        text="Contains special character"
+                      />
                     </div>
                   </div>
                   <Button

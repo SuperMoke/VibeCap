@@ -94,9 +94,9 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                   text: "Profile",
                 },
                 {
-                  href: "/admin/admin_attendancetracking",
+                  href: "/admin/admin_userlogstracking",
                   icon: UsersIcon,
-                  text: "Attendance Tracking",
+                  text: "User Logs Tracking",
                 },
                 {
                   href: "/admin/admin_logs",
