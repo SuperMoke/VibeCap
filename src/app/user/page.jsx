@@ -349,7 +349,7 @@ export default function UserHomepage() {
           {
             position: "top-right",
             icon: false,
-            autoClose: 2000,
+            autoClose: 5000,
           }
         );
         tipIndex++;
@@ -432,53 +432,75 @@ export default function UserHomepage() {
   const [lastMusicThresholds, setLastMusicThresholds] = useState({});
 
   const checkEmotionThreshold = async (counts) => {
-    // Don't check if already playing
-    if (isPlaying) return;
+    // Don't check if already playing and locked
+    if (isPlaying && isPlaylistLocked) return;
 
-    const musicThreshold = 20;
-    let updatedMusicThresholds = { ...lastMusicThresholds };
-
-    // Sort emotions by count, excluding neutral
+    // Filter out neutral and sort emotions by count
     const sortedEmotions = Object.entries(counts)
       .filter(([emotion]) => emotion !== "neutral")
       .sort(([, a], [, b]) => b - a);
 
-    for (const [emotion, count] of sortedEmotions) {
-      if (count >= musicThreshold) {
-        const thresholdMultiple = Math.floor(count / musicThreshold);
+    if (sortedEmotions.length === 0) return;
 
-        // Check if we've hit a new threshold multiple
-        if (
-          !lastMusicThresholds[emotion] ||
-          thresholdMultiple > lastMusicThresholds[emotion]
-        ) {
-          try {
-            // Fetch new playlist
-            await fetchSongs(emotion);
+    const [dominantEmotion, dominantCount] = sortedEmotions[0];
 
-            // Update UI elements
-            setCurrentPlaylistEmotion(emotion);
-            setCurrentMusicMessage(musicMessages[emotion][0]);
+    // Case 1: Initial trigger at 20 counts
+    if (dominantCount >= 20 && !currentPlaylistEmotion) {
+      await triggerPlaylist(dominantEmotion, counts);
+      return;
+    }
 
-            // Play notification sound
-            const notificationSound = new Audio(
-              "/VipeCap Music Recommendation Sound Effect.mp3"
-            );
-            await notificationSound.play();
-
-            // Update thresholds
-            updatedMusicThresholds[emotion] = thresholdMultiple;
-            setLastMusicThresholds(updatedMusicThresholds);
-
-            // Lock playlist until complete
-            setIsPlaylistLocked(true);
-
-            break;
-          } catch (error) {
-            console.error("Error recommending music:", error);
-          }
-        }
+    // Case 2: Switch playlist when a different emotion becomes dominant
+    if (
+      currentPlaylistEmotion &&
+      dominantEmotion !== currentPlaylistEmotion &&
+      dominantCount >= 20
+    ) {
+      const currentCount = counts[currentPlaylistEmotion] || 0;
+      if (dominantCount - currentCount >= 20) {
+        await triggerPlaylist(dominantEmotion, counts);
+        return;
       }
+    }
+
+    // Case 3: New threshold multiple for same emotion
+    if (dominantEmotion === currentPlaylistEmotion && dominantCount >= 20) {
+      const thresholdMultiple = Math.floor(dominantCount / 20);
+      if (thresholdMultiple > (lastMusicThresholds[dominantEmotion] || 0)) {
+        await triggerPlaylist(dominantEmotion, counts);
+      }
+    }
+  };
+
+  // Helper function to trigger playlist with counts parameter
+  const triggerPlaylist = async (emotion, counts) => {
+    try {
+      // Stop current playback
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+
+      // Fetch and start new playlist
+      await fetchSongs(emotion);
+      setCurrentPlaylistEmotion(emotion);
+      setCurrentMusicMessage(musicMessages[emotion][0]);
+
+      // Play notification sound
+      const notificationSound = new Audio(
+        "/VipeCap Music Recommendation Sound Effect.mp3"
+      );
+      await notificationSound.play();
+
+      // Update thresholds using passed counts
+      setLastMusicThresholds((prev) => ({
+        ...prev,
+        [emotion]: Math.floor(counts[emotion] / 20),
+      }));
+
+      setIsPlaylistLocked(false);
+    } catch (error) {
+      console.error("Error triggering playlist:", error);
     }
   };
 
