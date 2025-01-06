@@ -727,7 +727,7 @@ export default function UserHomepage() {
     let updatedThresholds = { ...lastThresholds };
 
     const sortedEmotions = Object.entries(counts)
-      .filter(([emotion]) => emotion !== "neutral")
+      .filter(([emotion, count]) => emotion !== "neutral" && count > 0)
       .sort(([, a], [, b]) => b - a);
 
     for (const [emotion, count] of sortedEmotions) {
@@ -1002,6 +1002,7 @@ export default function UserHomepage() {
       await resetEmotionCounts();
       setExpressionCount({});
       setFeedbackMessage("");
+      setLastThresholds({});
       setOpenResetDialog(false);
       // Reset accepted prompts
       setAcceptedPrompts({});
@@ -1075,6 +1076,7 @@ export default function UserHomepage() {
       await resetEmotionCounts();
       setExpressionCount({});
       setFeedbackMessage("");
+      setLastThresholds({});
       setCurrentEmotion("");
       setCurrentSong("");
       setCurrentTime(0);
