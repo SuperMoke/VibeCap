@@ -1010,7 +1010,7 @@ export default function UserHomepage() {
       setCurrentSong("");
       setCurrentTime(0);
       localStorage.removeItem("acceptedPrompts");
-      toast.success("Successfully reset mood data", {
+      toast.success("Your mood data has been successfully reset!", {
         position: "top-right",
         autoClose: 2000,
       });

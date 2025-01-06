@@ -112,7 +112,23 @@ export default function Register() {
         onClose: () => router.push("/"),
       });
     } catch (error) {
-      toast.error("Something went wrong!");
+      const errorMessage = (() => {
+        switch (error.code) {
+          case "auth/email-already-in-use":
+            return "This email is already registered. Please use a different email or try logging in.";
+          case "auth/invalid-email":
+            return "Invalid email format. Please check your email address.";
+          case "auth/operation-not-allowed":
+            return "Email/password registration is not enabled. Please contact support.";
+          case "auth/weak-password":
+            return "Password is too weak. Please follow the password requirements.";
+          case "auth/network-request-failed":
+            return "Network error. Please check your internet connection and try again.";
+          default:
+            return `Registration failed: ${error.message}`;
+        }
+      })();
+      toast.error(errorMessage, { autoClose: 6000 });
     } finally {
       setIsLoading(false);
     }

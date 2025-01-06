@@ -13,6 +13,21 @@ import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const getErrorMessage = (errorCode) => {
+  switch (errorCode) {
+    case "auth/invalid-email":
+      return "The email address is not valid.";
+    case "auth/user-not-found":
+      return "No account exists with this email address.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please try again later.";
+    case "auth/network-request-failed":
+      return "Network error. Please check your internet connection.";
+    default:
+      return "An error occurred while sending the reset email. Please try again.";
+  }
+};
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +42,15 @@ export default function ForgotPasswordPage() {
       toast.success("Password reset email sent! Check your inbox.");
       setEmail("");
     } catch (error) {
-      toast.error("Error sending reset email. Please try again.");
+      const errorMessage = getErrorMessage(error.code);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsLoading(false);
     }
